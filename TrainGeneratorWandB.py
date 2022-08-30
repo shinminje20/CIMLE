@@ -14,9 +14,8 @@ from torch.utils.data import Subset
 from torch.cuda.amp import autocast, GradScaler
 import torchvision.utils as tv_utils
 
-from KorKMinusOne import KorKMinusOne
 from DatasetNewCode import Dataset_new_code
-from CIMLEDataLoader import CIMLEDataLoader
+from ConditionalIMLE import CIMLEDataLoader, KorKMinusOne
 from CAMNet import *
 from Corruptions import Corruption
 from Data import *
