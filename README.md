@@ -37,32 +37,80 @@ This may take some time, so please download dataset first.
 ### Run Code
 
 ```
-python TrainGeneratorWandB.py --data_tr butterfly/train --data_val butterfly/val --res 16 ... 256
+python TrainGeneratorWandB.py --data_tr DATASET_NAME --data_val DATASET_NAME --res 16 ... 256
 ```
 
-### Code Organization
-- 
+### TrainGeneratorWandB Arguments
+```
+  --wandb {disabled,online,offline}
+                        disabled: no W&B logging, online: normal W&B logging
+  --suffix SUFFIX       optional training suffix
+  --job_id JOB_ID       Variable for storing SLURM job ID
+  --uid UID             Unique identifier for the run. Should be specified only when resuming, as it needs to be generated via WandB otherwise
+  --resume RESUME       a path or epoch number to resume from or nothing for no resuming
+  --data_path DATA_PATH
+                        path to where datasets are stored
+  --spi SPI             samples per image in logging, showing the model's diversity.
+  --num_val_images NUM_VAL_IMAGES
+                        Number of images to use for validation
+  --chunk_epochs {0,1}  whether to chunk by epoch. Useful for ComputeCanada, annoying otherwise.
+  --gpus GPUS [GPUS ...]
+                        GPU ids
+  --code_bs CODE_BS     GPU ids
+  --data_tr DATA_TR     data to train on
+  --data_val DATA_VAL   data to train on
+  --res RES [RES ...]   resolutions to see data at
+  --alpha ALPHA         Amount of weight on MSE loss
+  --seed SEED           random seed
+  --proj_dim PROJ_DIM   projection dimensionality
+  --epochs EPOCHS       number of epochs (months) to train for
+  --outer_loops OUTER_LOOPS
+                        number of outer_loops to train for
+  --bs BS               batch size
+  --mini_bs MINI_BS     batch size
+  --ns NS [NS ...]      number of samples for IMLE
+  --ipc IPC             Effective gradient steps per set of codes. --ipc // --mini_bs is equivalent to num_days in the original CAMNet formulation
+  --lr LR               learning rate
+  --color_space {rgb,lab}
+                        Color space to use during training
+  --sp SP [SP ...]      parallelism across samples during code training
+  --subsample_size SUBSAMPLE_SIZE
+                        number of subsample data
+  --num_iteration NUM_ITERATION
+                        number of subsample data
+  --sample_method {normal,mixture}
+                        The method with which to sample latent codes
+  --grayscale {0,0.5,1}
+                        grayscale corruption
+  --mask_res MASK_RES   sidelength of image at which to do masking
+  --mask_frac MASK_FRAC
+                        fraction of pixels to mask
+  --fill {color,zero}   how to fill masked out areas
+  --code_nc CODE_NC     number of code channels
+  --in_nc IN_NC         number of input channels. SHOULD ALWAYS BE THREE.
+  --out_nc OUT_NC       number of output channels
+  --map_nc MAP_NC       number of input channels to mapping net
+  --latent_nc LATENT_NC
+                        number of channels inside the mapping net
+  --resid_nc RESID_NC [RESID_NC ...]
+                        list of numbers of residual channels in RRDB blocks for each CAMNet level
+  --dense_nc DENSE_NC [DENSE_NC ...]
+                        list of numbers of dense channels in RRDB blocks for each CAMNet level
+  --n_blocks N_BLOCKS   number of RRDB blocks inside each level
+  --act_type {leakyrelu}
+                        activation type
+  --init_type {kaiming,normal}
+                        NN weight initialization method
+  --init_scale INIT_SCALE
+                        Scale for weight initialization
+```
 
 ---
 
-## Key Arguments & Objects
+## Key Objects
 
-* subsample_size
-* num_iteration
-* outer_loop
 * KorKMinusOne
 * CIMLEDataLoader
-
-## Subsample Size
-
-`subsample_size` argument determines the size of subsample for each `outer_loop` iteration. `subsample_size=len(dataset)` by default.
-
-## Num iteration (Number of Iteration)
-
-`num_iteration` argument determines the number of iterations for each subsampled data.
-
-## Outer Loop
-`outer_loop` argument is used instead of `epoch`. Each `outer_loop` iteration is one subsampling. Thus, one `epoch` concept, use of entire datasets, is depends on `subsample_size` value. (For example, if `subsample_size=400, len(dataset)=1200`, then 3 `outer_loops` considered as an `epoch`.
 
 ## KorKMinusOne
 
@@ -156,8 +204,3 @@ for loop in range(args.outer_loop)
         #### Training ####
         
 ```
-
-# Unconditional IMLE with Gaussian Mixture noise
-
-## Objectives
-* Style GAN
