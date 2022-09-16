@@ -13,7 +13,7 @@ Current CAM-NET has triple loops when training model and this makes code complic
 
 By using `CIMLEDataLoader`, user will see less loop complexity, have better readability, and usability.
 
-**previous training structure**
+###previous training structure**
 ```
 loader = DataLoader(.....)
 for epoch in epochs
@@ -28,7 +28,7 @@ for epoch in epochs
             #### Training ####
 ```
 
-**updated strcuture**
+###updated strcuture**
 ```
 k_or_k_minus_one = KorKMinusOne(range(len(data_tr)), shuffle=True)
 loader = CIMLEDataLoader(dataset, k_or_k_minus_one,  model, corruptor, z_gen, loss_fn, ...)
