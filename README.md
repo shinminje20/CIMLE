@@ -1,4 +1,3 @@
-# IMLE
 
 CAM-NET is a unified architecture that can be applied to a broad range of tasks which built on the recently proposed technique of Implicit Maximum Likelihood Estimation (IMLE).
 
