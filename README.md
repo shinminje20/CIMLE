@@ -56,7 +56,7 @@ git clone https://github.com/shinminje20/IMLE.git
 
 Prepare and set up the datasets to use. Run
 ```
-python data/SetupDataset.py --data DATASET_NAME --sizes [16, 32, 64, 128, 256]
+python data/SetupDataset.py --sizes 16 32 64 128 256
 ```
 
 This may take some time, so please download dataset first.
