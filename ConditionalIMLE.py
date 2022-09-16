@@ -31,8 +31,8 @@ class CIMLEDataLoader(object):
     - `KorKMinusOne` is used to diversiy dataset whenever DataLoader generates.
     - During __iter__ mathod, `num_chained_loaders` determines how many chained dataloader to be generated. 
     - `num_chained_loaders` is self.num_iteration // len(corrupted_dataset) + 1 becauise at the last loop of `num_chained_loaders`
-        - If `num_iteration` is divisible by `length of dataset`, then generated another DataLoader
-        - If not divisible, then remainder of `num_iteration` is less then `length of dataset`,
+        * If `num_iteration` is divisible by `length of dataset`, then generated another DataLoader
+        * If not divisible, then remainder of `num_iteration` is less then `length of dataset`,
           Thus, generate subset of dataset that exactly matching the size of remainder `number of iterations`, and use it to generate last Dataloader.
     - Generated DataLoaders are chained at the end of `__iter__` method by `itertools.chain` method. 
 
