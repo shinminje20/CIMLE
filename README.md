@@ -67,6 +67,8 @@ This may take some time, so please download dataset first.
 python TrainGenerator.py --data_tr butterfly/train --data_val butterfly/val --res 32 64 128 256 --bs 2 --sp 64 32 16 --wandb disabled --code_bs 8 --subsample_size 400 --outer_loops 40 --num_iteration 10000
 ```
 
+Outcomes will be generated in `generators` directory.
+
 ## TrainGenerator Arguments
 ```
   --wandb {disabled,online,offline}
