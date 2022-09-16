@@ -1,4 +1,3 @@
-from KorKMinusOne import KorKMinusOne
 from torch.utils.data import Dataset, DataLoader, Subset
 import queue
 from typing import Optional
@@ -7,10 +6,16 @@ from utils.Utils import *
 from random import sample
 
 class KorKMinusOne:
+    """
+    KorKMinusOne (KKM), is to track of how many times each data has been used.
+    idxs        -- input is a list that maps each data's positional index.
+    shuffle     -- dertmine whether to randomize `idxs` at each `epoch`. `shuffle = False` by default.
+    """
     def __init__(self, idxs, shuffle=False):
         self.counter = 0
         self.shuffle = shuffle
         self.idxs = idxs
+
     def pop(self):
         if self.counter == len(self.idxs):
             self.counter = 0
@@ -22,6 +27,15 @@ class KorKMinusOne:
 
 class CIMLEDataLoader(object):
     """
+    - CIMLEDataLoader returns chained DataLoaders that has exatclty `num_iteration` amounts iterations.
+    - `KorKMinusOne` is used to diversiy dataset whenever DataLoader generates.
+    - During __iter__ mathod, `num_chained_loaders` determines how many chained dataloader to be generated. 
+    - `num_chained_loaders` is self.num_iteration // len(corrupted_dataset) + 1 becauise at the last loop of `num_chained_loaders`
+        - If `num_iteration` is divisible by `length of dataset`, then generated another DataLoader
+        - If not divisible, then remainder of `num_iteration` is less then `length of dataset`,
+          Thus, generate subset of dataset that exactly matching the size of remainder `number of iterations`, and use it to generate last Dataloader.
+    - Generated DataLoaders are chained at the end of `__iter__` method by `itertools.chain` method. 
+
     Args:
     subsample_size      --  argument determines the size of subsample for each `outer_loop` iteration. `subsample_size=len(dataset)` by default.
     num_iteration       --  argument determines the number of iterations for each subsampled data.
@@ -45,7 +59,6 @@ class CIMLEDataLoader(object):
         self.kkm = kkm
         self.subsample_size = subsample_size if subsample_size is not None else len(self.dataset)
         self.num_iteration = num_iteration
-        self.num_chained_loaders = (self.num_iteration // (self.subsample_size // batch_size)) + 1 if self.num_iteration > (self.subsample_size // batch_size) else 1
         self.model = model
         self.z_gen = z_gen
         self.loss_fn = loss_fn
@@ -60,31 +73,32 @@ class CIMLEDataLoader(object):
         self.shuffle = shuffle
         self.chain_loaders = []
         self.data_len = 0
+        
     def __iter__(self):
-        # (len datset // subsample_size) * num of epochs = total num_samplings
-        # --num_samplings
 
-
-        # num_iteration: # of iteration per samples
         loaders = []
         iter_data = Subset(self.dataset, indices=[self.kkm.pop() for _ in range(self.subsample_size)])
 
         codes, corrupted, targets  = get_codes_in_chunks(iter_data, self.model, self.corruptor, self.z_gen, self.loss_fn, num_samples=self.num_samples,
                                     sample_parallelism=self.sample_parallelism, code_bs=self.code_bs)
         corrupted_dataset = CorruptedCodeYDataset(corrupted, codes, targets)       
-            
+        
+        num_chained_loaders = self.num_iteration // len(corrupted_dataset) + 1
         self.data_len = 0
-        for i in range(self.num_chained_loaders):
-            if i == self.num_chained_loaders - 1:
-                if self.num_iteration % (self.subsample_size // self.batch_size) != 0 and self.num_iteration > self.subsample_size:
-                    Subset_corrupted_dataset = Subset(corrupted_dataset, sample(range(len(corrupted_dataset)),
-                                                     self.num_iteration % (self.subsample_size // self.batch_size)))
-                    loader = DataLoader(Subset_corrupted_dataset, 
+
+        for i in range(num_chained_loaders):
+            if i == num_chained_loaders - 1:
+                if self.num_iteration % len(corrupted_dataset) != 0 and self.num_iteration > len(corrupted_dataset):
+                    subset_corrupted_dataset = Subset(corrupted_dataset, sample(range(len(corrupted_dataset)),
+                                                     self.num_iteration % len(corrupted_dataset)))
+
+                    loader = DataLoader(subset_corrupted_dataset, 
                         pin_memory=self.pin_memory,
                         shuffle=self.shuffle,
                         batch_size=self.batch_size,
                         num_workers=self.num_workers,
                         drop_last=self.drop_last)
+
                 else:
                     break
             else:
@@ -107,8 +121,6 @@ class CIMLEDataLoader(object):
         except IndexError:
             self.data_len = 0
             raise StopIteration
-
-    next = __next__  # Python 2 compatibility
 
     def __len__(self):
         return self.data_len
@@ -138,6 +150,7 @@ class CorruptedCodeYDataset(Dataset):
     def __getitem__(self, idx):
         idx = idx // self.expand_factor
         cx = self.cx[idx]
+        print("__getitem__")
         codes = [c[idx] for c in self.codes]
         ys = [y[idx] for y in self.ys]
         return cx, codes, ys
@@ -158,6 +171,7 @@ def get_new_codes(cx, y, model, z_gen, loss_fn, num_samples=16, sample_paralleli
 
     bs = len(cx)
     level_codes = z_gen(bs, level="all")
+
     with torch.no_grad():
         for level_idx in tqdm(range(len(num_samples)),
             desc="Sampling: levels",
