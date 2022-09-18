@@ -51,7 +51,7 @@ pip install 'git+https://github.com/katsura-jp/pytorch-cosine-annealing-with-war
 ```
 To clone the repo
 ```
-git clone https://github.com/shinminje20/IMLE.git
+https://github.com/shinminje20/CIMLE.git
 ```
 
 Prepare and set up the datasets to use. Run
